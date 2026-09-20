@@ -1,0 +1,2 @@
+# 注意：必須鎖 1.x。mcp 2.x 把 FastMCP 改名為 MCPServer，本專案的 import 會失敗。
+mcp[cli]<2
