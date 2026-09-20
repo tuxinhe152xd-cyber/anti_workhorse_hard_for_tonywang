@@ -57,6 +57,16 @@ def _hours() -> float:
 
 # ---------- 系統通知 ----------
 
+def _osa(s: str) -> str:
+    """包成 AppleScript 字面值。AppleScript 只認雙引號，用 repr 的單引號會語法錯誤。"""
+    return '"' + s.replace("\\", "\\\\").replace('"', '\\"').replace("\n", " ") + '"'
+
+
+def _ps(s: str) -> str:
+    """包成 PowerShell 單引號字面值，內部的單引號要寫成兩個。"""
+    return "'" + s.replace("'", "''").replace("\n", " ") + "'"
+
+
 def _notify(title: str, message: str) -> None:
     """盡力而為地彈一個系統通知，失敗就算了，絕不讓 server 掛掉。"""
     if not NOTIFY:
@@ -64,7 +74,8 @@ def _notify(title: str, message: str) -> None:
     try:
         system = platform.system()
         if system == "Darwin":
-            script = f'display notification {message!r} with title {title!r} sound name "Basso"'
+            script = (f"display notification {_osa(message)} "
+                      f"with title {_osa(title)} sound name \"Basso\"")
             subprocess.run(["osascript", "-e", script], timeout=5, check=False)
         elif system == "Linux" and shutil.which("notify-send"):
             subprocess.run(["notify-send", "-u", "critical", title, message],
@@ -72,7 +83,7 @@ def _notify(title: str, message: str) -> None:
         elif system == "Windows":
             ps = (
                 "[reflection.assembly]::LoadWithPartialName('System.Windows.Forms')>$null;"
-                f"[System.Windows.Forms.MessageBox]::Show('{message}','{title}')"
+                f"[System.Windows.Forms.MessageBox]::Show({_ps(message)},{_ps(title)})"
             )
             subprocess.run(["powershell", "-NoProfile", "-Command", ps],
                            timeout=10, check=False)
